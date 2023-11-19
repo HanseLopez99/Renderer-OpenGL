@@ -16,9 +16,38 @@ class Renderer(object):
     glEnable(GL_DEPTH_TEST)
     glViewport(0, 0, self.width, self.height)
 
+    self.elapsedTime = 0.0
+
     self.scene = []
 
     self.activeShader = None
+
+    # View matrix
+    self.camPosition = glm.vec3(0,0,0)
+    self.camRotation = glm.vec3(0,0,0)
+
+    # Projection matrix
+    self.projectionMatrix = glm.perspective(
+      glm.radians(60), # FOV
+      self.width / self.height, # Aspect ratio
+      0.1, # Near Plane
+      1000 # Far plane
+    )
+
+  def getViewMatrix(self):
+    identity = glm.mat4(1)
+
+    translateMat = glm.translate(identity, self.camPosition)
+
+    pitch = glm.rotate(identity, glm.radians(self.camRotation.x), glm.vec3(1,0,0))
+    yaw = glm.rotate(identity, glm.radians(self.camRotation.y), glm.vec3(0,1,0))
+    roll = glm.rotate(identity, glm.radians(self.camRotation.z), glm.vec3(0,0,1))
+
+    rotationMat = pitch * yaw * roll
+
+    camMatrix = translateMat * rotationMat
+
+    return glm.inverse(camMatrix)
 
   def setShader(self, vertexShader, fragmentShader):
     if vertexShader is not None and fragmentShader is not None:
@@ -37,5 +66,32 @@ class Renderer(object):
     if self.activeShader is not None:
       glUseProgram(self.activeShader)
 
+      glUniformMatrix4fv(
+        glGetUniformLocation(self.activeShader, 'viewMatrix'),
+        1,
+        GL_FALSE,
+        glm.value_ptr(self.getViewMatrix())
+      )
+
+      glUniformMatrix4fv(
+        glGetUniformLocation(self.activeShader, 'projectionMatrix'),
+        1,
+        GL_FALSE,
+        glm.value_ptr(self.projectionMatrix)
+      )
+
+      glUniform1f(
+        glGetUniformLocation(self.activeShader, 'time'),
+        self.elapsedTime
+      )
+
     for obj in self.scene:
+      if self.activeShader is not None:
+        glUniformMatrix4fv(
+          glGetUniformLocation(self.activeShader, 'modelMatrix'),
+          1,
+          GL_FALSE,
+          glm.value_ptr(obj.getModelMatrix())
+        )
+
       obj.render()

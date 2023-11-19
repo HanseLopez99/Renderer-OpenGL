@@ -1,9 +1,10 @@
 import pygame
 from pygame.locals import *
-
+import glm
 from gl import Renderer
-from buffer import Buffer
+from model import Model
 from shaders import *
+
 
 width = 960
 height = 540
@@ -18,15 +19,19 @@ rend = Renderer(screen)
 rend.setShader(vertex_shader, fragment_shader)
 
 # Positions           # Colors
-triangle = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
+triangleData = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
             0, 0.5, 0.0,     0.0, 1.0, 0.0,
             0.5, -0.5, 0.0,   0.0, 0.0, 1.0]
 
-rend.scene.append(Buffer(triangle))
+triangleModel = Model(triangleData)
+triangleModel.position.z = -10
+triangleModel.scale = glm.vec3(5,5,5)
+
+rend.scene.append(triangleModel)
 
 isRunning = True
 while isRunning:
-
+    deltaTime = clock.tick(60)/1000
     keys = pygame.key.get_pressed()
 
     for event in pygame.event.get():
@@ -37,28 +42,34 @@ while isRunning:
             if event.key == pygame.K_ESCAPE:
                 isRunning = False
 
-    if keys[K_RIGHT]:
-        if rend.clearColor[0] < 1.0:
-            rend.clearColor[0] += deltaTime
-    elif keys[K_LEFT]:
-        if rend.clearColor[0] > 0.0:
-            rend.clearColor[0] -= deltaTime
+    if keys[K_d]:
+        rend.camPosition.x += 5 * deltaTime
+    elif keys[K_a]:
+        rend.camPosition.x -= 5 * deltaTime
+
+    if keys[K_w]:
+        rend.camPosition.y += 5 * deltaTime
+    elif keys[K_s]:
+        rend.camPosition.y -= 5 * deltaTime
+
+    if keys[K_q]:
+        rend.camPosition.z += 5 * deltaTime
+    elif keys[K_e]:
+        rend.camPosition.z -= 5 * deltaTime
 
     if keys[K_UP]:
-        if rend.clearColor[1] < 1.0:
-            rend.clearColor[1] += deltaTime
+        triangleModel.rotation.x += 45 * deltaTime
     elif keys[K_DOWN]:
-        if rend.clearColor[1] > 0.0:
-            rend.clearColor[1] -= deltaTime
+        triangleModel.rotation.x -= 45 * deltaTime
 
-    if keys[K_KP_PLUS]:
-        if rend.clearColor[2] < 1.0:
-            rend.clearColor[2] += deltaTime
-    elif keys[K_KP_MINUS]:
-        if rend.clearColor[2] > 0.0:
-            rend.clearColor[2] -= deltaTime
+    if keys[K_LEFT]:
+        triangleModel.rotation.y -= 45 * deltaTime
+    elif keys[K_RIGHT]:
+        triangleModel.rotation.y += 45 * deltaTime
 
-    deltaTime = clock.tick(60) / 1000
+    triangleModel.rotation.y += 45 * deltaTime
+
+    rend.elapsedTime += deltaTime
 
     rend.render()
     pygame.display.flip()
