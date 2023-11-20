@@ -14,6 +14,7 @@ class Renderer(object):
     self.clearColor = [0,0,0]
 
     glEnable(GL_DEPTH_TEST)
+    # glCullFace(GL_FRONT, GL_FILL)
     glViewport(0, 0, self.width, self.height)
 
     self.elapsedTime = 0.0
@@ -22,18 +23,20 @@ class Renderer(object):
 
     self.activeShader = None
 
-    # View matrix
-    self.camPosition = glm.vec3(0,0,0)
+    self.dirLight = glm.vec3(1, 0, 0)
+
+    # View Matrix
+    self.camPosition = glm.vec3(0 ,0, 0)
     self.camRotation = glm.vec3(0,0,0)
 
     # Projection matrix
     self.projectionMatrix = glm.perspective(
       glm.radians(60), # FOV
-      self.width / self.height, # Aspect ratio
+      self.width / self.height, # Aspect Ratio
       0.1, # Near Plane
-      1000 # Far plane
+      1000 # Far Plane
     )
-
+      
   def getViewMatrix(self):
     identity = glm.mat4(1)
 
@@ -49,7 +52,7 @@ class Renderer(object):
 
     return glm.inverse(camMatrix)
 
-  def setShader(self, vertexShader, fragmentShader):
+  def setShaders(self, vertexShader, fragmentShader):
     if vertexShader is not None and fragmentShader is not None:
       self.activeShader = compileProgram(
         compileShader(vertexShader, GL_VERTEX_SHADER),
@@ -78,11 +81,6 @@ class Renderer(object):
         1,
         GL_FALSE,
         glm.value_ptr(self.projectionMatrix)
-      )
-
-      glUniform1f(
-        glGetUniformLocation(self.activeShader, 'time'),
-        self.elapsedTime
       )
 
     for obj in self.scene:

@@ -11,23 +11,22 @@ height = 540
 
 pygame.init()
 
-screen = pygame.display.set_mode((width, height), pygame.OPENGL | pygame.DOUBLEBUF)
+screen = pygame.display.set_mode((width,height), pygame.OPENGL | pygame.DOUBLEBUF)
 clock = pygame.time.Clock()
 
 rend = Renderer(screen)
+rend.setShaders(vertex_shader, fragment_shader)
 
-rend.setShader(vertex_shader, fragment_shader)
+modelo = Model(
+    filename="models/monkey.obj", 
+    translate=glm.vec3(0, -1, -5), 
+    rotation=glm.vec3(-90, 0, 0), 
+    scale=glm.vec3(0.05, 0.05, 0.05)
+)
 
-# Positions           # Colors
-triangleData = [-0.5, -0.5, 0.0, 1.0, 0.0, 0.0,
-            0, 0.5, 0.0,     0.0, 1.0, 0.0,
-            0.5, -0.5, 0.0,   0.0, 0.0, 1.0]
+modelo.loadTexture("textures/monkey.bmp")
 
-triangleModel = Model(triangleData)
-triangleModel.position.z = -10
-triangleModel.scale = glm.vec3(5,5,5)
-
-rend.scene.append(triangleModel)
+rend.scene.append(modelo)
 
 isRunning = True
 while isRunning:
@@ -58,16 +57,14 @@ while isRunning:
         rend.camPosition.z -= 5 * deltaTime
 
     if keys[K_UP]:
-        triangleModel.rotation.x += 45 * deltaTime
+        rend.camRotation.x += 45 * deltaTime
     elif keys[K_DOWN]:
-        triangleModel.rotation.x -= 45 * deltaTime
+        rend.camRotation.x -= 45 * deltaTime
 
     if keys[K_LEFT]:
-        triangleModel.rotation.y -= 45 * deltaTime
+        rend.camRotation.y += 45 * deltaTime
     elif keys[K_RIGHT]:
-        triangleModel.rotation.y += 45 * deltaTime
-
-    triangleModel.rotation.y += 45 * deltaTime
+        rend.camRotation.y -= 45 * deltaTime
 
     rend.elapsedTime += deltaTime
 
