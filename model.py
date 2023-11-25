@@ -87,6 +87,19 @@ class Model(object):
         self.rotation = rotation
         self.scale = scale
 
+    def rotate(self, rotation_vector):
+        """
+        Rota el modelo.
+        :param rotation_vector: Un vector glm.vec3 que representa la rotación en grados en cada eje (x, y, z).
+        """
+        self.rotation += rotation_vector
+        if self.rotation.x >= 360 or self.rotation.x <= -360:
+            self.rotation.x = 0
+        if self.rotation.y >= 360 or self.rotation.y <= -360:
+            self.rotation.y = 0
+        if self.rotation.z >= 360 or self.rotation.z <= -360:
+            self.rotation.z = 0
+
     def loadTexture(self,textureName):
         self.textureSurface = pygame.image.load(textureName)
         self.textureData = pygame.image.tostring(self.textureSurface, "RGB", True)
