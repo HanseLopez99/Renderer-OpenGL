@@ -5,13 +5,16 @@ import pygame
 from obj import Obj
 
 class Model(object):
-    def __init__(self, filename, translate=glm.vec3(0, 0, 0), rotation=glm.vec3(0, 0, 0), scale=glm.vec3(1, 1, 1)):
+    def __init__(self,filename,translate=glm.vec3(0,0,0),rotation=glm.vec3(0,0,0),scale=glm.vec3(1,1,1)):
         model = Obj(filename)
+        
         data = []
         untransformedVerts = []
         textCoords = []
         normals = []
+        
         for face in model.faces:
+            
             vertCount = len(face)
             v0 = model.vertices[face[0][0]-1]
             v1 = model.vertices[face[1][0]-1]
@@ -24,6 +27,7 @@ class Model(object):
             vt2 = model.textcoords[face[2][1]-1]
             if vertCount == 4:
                 vt3 = model.textcoords[face[3][1]-1]
+
             vn0 = model.normals[face[0][2]-1]
             vn1 = model.normals[face[1][2]-1]
             vn2 = model.normals[face[2][2]-1]
@@ -45,6 +49,7 @@ class Model(object):
                 textCoords.append([vt0[0],vt0[1]])
                 textCoords.append([vt2[0],vt2[1]])
                 textCoords.append([vt3[0],vt3[1]])
+
             normals.append(vn0)
             normals.append(vn1)
             normals.append(vn2)
@@ -87,77 +92,70 @@ class Model(object):
         self.rotation = rotation
         self.scale = scale
 
-    def rotate(self, rotation_vector):
-        """
-        Rota el modelo.
-        :param rotation_vector: Un vector glm.vec3 que representa la rotación en grados en cada eje (x, y, z).
-        """
-        self.rotation += rotation_vector
-        if self.rotation.x >= 360 or self.rotation.x <= -360:
-            self.rotation.x = 0
-        if self.rotation.y >= 360 or self.rotation.y <= -360:
-            self.rotation.y = 0
-        if self.rotation.z >= 360 or self.rotation.z <= -360:
-            self.rotation.z = 0
+    def rotate(self, rotation_vec):
+        self.rotation += rotation_vec
 
     def loadTexture(self,textureName):
         self.textureSurface = pygame.image.load(textureName)
-        self.textureData = pygame.image.tostring(self.textureSurface, "RGB", True)
+        self.textureData = pygame.image.tostring(self.textureSurface,"RGB",True)
         self.textureBuffer = glGenTextures(1)
-            
+        
     def getModelMatrix(self):
         identity = glm.mat4(1)
         translateMat = glm.translate(identity,self.translate)
         
-        pitch = glm.rotate(identity, glm.radians(self.rotation.x), glm.vec3(1,0,0))
-        yaw = glm.rotate(identity, glm.radians(self.rotation.y), glm.vec3(0,1,0))
-        roll = glm.rotate(identity, glm.radians(self.rotation.z), glm.vec3(0,0,1))
+        pitch = glm.rotate(identity,glm.radians(self.rotation.x),glm.vec3(1,0,0))
+        yaw = glm.rotate(identity,glm.radians(self.rotation.y),glm.vec3(0,1,0))
+        roll = glm.rotate(identity,glm.radians(self.rotation.z),glm.vec3(0,0,1))
         
         rotationMat = pitch*yaw*roll
-        scaleMat = glm.scale(identity, self.scale)
+        scaleMat = glm.scale(identity,self.scale)
         
-        return translateMat * rotationMat * scaleMat
-            
+        return translateMat*rotationMat*scaleMat
+        
 
     def render(self):
+        
         #Atamos los buffers del object a la GPU
-        glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
+        glBindBuffer(GL_ARRAY_BUFFER,self.VBO)
         glBindVertexArray(self.VAO)
         
         #Especificar la informacion de vertices
         #Buffer ID, Buffer Size in Bytes, Buffer data, Usagge
-        glBufferData(GL_ARRAY_BUFFER, self.vertBuffer.nbytes, self.vertBuffer,GL_STATIC_DRAW)
+        glBufferData(GL_ARRAY_BUFFER,self.vertBuffer.nbytes,self.vertBuffer,GL_STATIC_DRAW)
         
         #Atributos
         #Especificar que representa el contenido del vertice
         #Attribute Number,Size,Type,Is it normalized,Stride,Offset
+
         #Atributo de posiciones
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * 8 ,ctypes.c_void_p(0))
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,4*8,ctypes.c_void_p(0))
         glEnableVertexAttribArray(0)
         
         #Atributo de coordenadas de textura
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,4 * 8, ctypes.c_void_p(4 * 3))
+        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*8,ctypes.c_void_p(4*3))
         glEnableVertexAttribArray(1)
         
         #Atributo de normales
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 4 * 8,ctypes.c_void_p(4 * 5))
+        glVertexAttribPointer(2,3,GL_FLOAT,GL_FALSE,4*8,ctypes.c_void_p(4*5))
         glEnableVertexAttribArray(2)
-    
+      
         #Acrivar la textura
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.textureBuffer)
-        glTexImage2D(
-            GL_TEXTURE_2D,                       #  Texture type
-            0,                                   #  Positions
-            GL_RGB,                              #  Interal Format
-            self.textureSurface.get_width(),     #  Width
-            self.textureSurface.get_height(),    #  Height
-            0,                                   #  Border
-            GL_RGB,                              #  Format
-            GL_UNSIGNED_BYTE,                    #  Type
-            self.textureData)                    #  Data
+        glBindTexture(GL_TEXTURE_2D,self.textureBuffer)
+        glTexImage2D(GL_TEXTURE_2D,                       #Texture type
+                               0,                                   #Positions
+                               GL_RGB,                              #Interal Format
+                               self.textureSurface.get_width(),     #width
+                               self.textureSurface.get_height(),    #height
+                               0,                                   #Border
+                               GL_RGB,                              #Format
+                               GL_UNSIGNED_BYTE,                    #Type
+                               self.textureData)                    #Data
         
         #glGenerateMipmap(GL_TEXTURE_2D)
         glGenerateTextureMipmap(self.textureBuffer)
-        glDrawArrays(GL_TRIANGLES, 0, int(len(self.vertBuffer) / 8))
 
+        glDrawArrays(GL_TRIANGLES,0,int(len(self.vertBuffer)/8))
+        
+        

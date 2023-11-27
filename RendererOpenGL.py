@@ -39,7 +39,7 @@ rend.scene.append(modelos[0])
 angulo_horizontal = 0 # Ángulo horizontal de la cámara
 angulo_vertical = 0 # Ángulo vertical de la cámara
 radio = 10 # Distancia de la cámara al origen
-zoom_min = -3 # Distancia mínima de la cámara al origen
+zoom_min = 0.1 # Distancia mínima de la cámara al origen
 zoom_max = 10 # Distancia máxima de la cámara al origen
 modelo_actual = 0 # Índice del modelo actual
 shader_actual = 0 # Índice del shader actual
@@ -79,42 +79,43 @@ while isRunning:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 isRunning = False
-            elif event.key >= pygame.K_1 and event.key <= pygame.K_9:
+            elif event.key==pygame.K_SPACE:
+                rend.toggleFilledMode()
+            elif event.key==pygame.K_7:
+                rend.setShaders(fat_vertex_shader, fragment_shader)
+            elif event.key==pygame.K_8:
+                rend.setShaders(vertex_shader, toon_shader)
+            elif event.key==pygame.K_9:
+                rend.setShaders(vertex_shader, gourad_shader)
+            elif event.key==pygame.K_0:
+                rend.setShaders(vertex_shader, unlit_shader)
+            elif event.key >= pygame.K_1 and event.key <= pygame.K_6:
                 # Cambiar modelo
                 num_modelo = event.key - pygame.K_1
                 if num_modelo < len(modelos):
                     rend.scene.clear()
                     rend.scene.append(modelos[num_modelo])
                     modelo_actual = num_modelo
+                    print(f"Cambiado al modelo {modelo_actual}")
 
     # Actualizar posición de la cámara
     rend.camPosition.x = radio * glm.sin(glm.radians(angulo_horizontal)) * glm.cos(glm.radians(angulo_vertical))
     rend.camPosition.y = radio * glm.sin(glm.radians(angulo_vertical))
     rend.camPosition.z = radio * glm.cos(glm.radians(angulo_horizontal)) * glm.cos(glm.radians(angulo_vertical))
-
-    # Asegurarse de que la posición de la cámara se actualice después de cada cambio
-    if pygame.mouse.get_pressed()[2] or event.type == pygame.MOUSEBUTTONDOWN:
-        rend.camPosition.x = radio * glm.sin(glm.radians(angulo_horizontal)) * glm.cos(glm.radians(angulo_vertical))
-        rend.camPosition.y = radio * glm.sin(glm.radians(angulo_vertical))
-        rend.camPosition.z = radio * glm.cos(glm.radians(angulo_horizontal)) * glm.cos(glm.radians(angulo_vertical))
+    rend.update()
 
     # Rotar modelo con WASD
     if keys[K_w]:
         modelos[modelo_actual].rotate(glm.vec3(1, 0, 0))
-    if keys[K_a]:
-        modelos[modelo_actual].rotate(glm.vec3(0, 1, 0))
     if keys[K_s]:
         modelos[modelo_actual].rotate(glm.vec3(-1, 0, 0))
+    if keys[K_a]:
+        modelos[modelo_actual].rotate(glm.vec3(0, 1, 0))
     if keys[K_d]:
         modelos[modelo_actual].rotate(glm.vec3(0, -1, 0))
 
-    # Cambiar de shader con barra espaciadora
-    if keys[K_SPACE]:
-        shader_actual = (shader_actual + 1) % len(shaders)
-        rend.setShaders(shaders[shader_actual])
-
     rend.elapsedTime += deltaTime
-
+    rend.update()
     rend.render()
     pygame.display.flip()
 
